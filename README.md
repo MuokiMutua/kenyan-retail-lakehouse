@@ -1,4 +1,6 @@
 #  Real-Time Retail Lakehouse & Command Center
+<img width="1909" height="1028" alt="image" src="https://github.com/user-attachments/assets/ec456ae9-41a9-4d29-af84-8741d0a1cbb5" />
+
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=Streamlit&logoColor=white)
