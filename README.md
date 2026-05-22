@@ -28,7 +28,7 @@ This project demonstrates a modern **Data Lakehouse** architecture, combining th
 * **Agentic Decision Log:** Simulates an AI orchestrator monitoring thresholds and triggering automated alerts (e.g., flash sales, restock alerts).
 * **Containerized Infrastructure:** Fully orchestrated via `docker-compose` with built-in UI tools (pgAdmin, Mongo Express, AKHQ).
 
-## 🛠️ Prerequisites
+##  Prerequisites
 
 * [Docker](https://www.docker.com/) & Docker Compose
 * [Python 3.10+](https://www.python.org/)
