@@ -1,4 +1,4 @@
-# 🛒 Real-Time Retail Lakehouse & Command Center
+#  Real-Time Retail Lakehouse & Command Center
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=Streamlit&logoColor=white)
@@ -20,7 +20,7 @@ This project demonstrates a modern **Data Lakehouse** architecture, combining th
     * **MongoDB:** Serves as the NoSQL data lake, storing the unstructured JSON receipts as an immutable audit log.
 4. **Command Center (`dashboard.py`):** A Streamlit application using Pandas and Plotly to execute federated queries across both databases, joining relational targets with streaming NoSQL actuals in real-time.
 
-## ✨ Key Features
+##  Key Features
 
 * **Federated Queries:** Merges data from SQL and NoSQL sources on the fly using Pandas.
 * **Resilient Database Connections:** Implements self-healing connection logic to automatically recover from dropped database connections or container restarts.
@@ -34,7 +34,7 @@ This project demonstrates a modern **Data Lakehouse** architecture, combining th
 * [Python 3.10+](https://www.python.org/)
 * [uv](https://github.com/astral-sh/uv) (Extremely fast Python package installer and resolver)
 
-## 🚀 Setup & Installation
+##  Setup & Installation
 
 ### 1. Start the Infrastructure
 Spin up the Kafka, PostgreSQL, and MongoDB containers. The database schema and initial targets will be automatically seeded via `init.sql`.
