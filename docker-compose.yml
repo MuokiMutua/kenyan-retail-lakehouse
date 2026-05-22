@@ -1,0 +1,130 @@
+
+services:
+
+  # ── 1. Apache Kafka (KRaft Mode — no ZooKeeper) ──────────────────────────
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: supermarket_kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      # FIX: was localhost:29093 — inside a container, localhost != the container
+      #      itself for inter-process binding; use the container hostname instead.
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@supermarket_kafka:29093"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093"
+      # PLAINTEXT is for connections from the Docker host (your laptop / simulator)
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://localhost:9092"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # FIX: auto-create the topic on first produce so the simulator never
+      #      errors with "UnknownTopicOrPartitionError" before the topic exists.
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ── 1b. Kafka Visual UI (AKHQ) ───────────────────────────────────────────
+  akhq:
+    image: tchiotludo/akhq:0.25.0
+    container_name: kafka_ui_akhq
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            supermarket-cluster:
+              properties:
+                bootstrap.servers: "supermarket_kafka:9092"
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  # ── 2. PostgreSQL (Relational Warehouse Dimensions) ──────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: supermarket_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     kenyan_retail_admin
+      POSTGRES_PASSWORD: NaivasPassword2026
+      POSTGRES_DB:       supermarket_metadata
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kenyan_retail_admin -d supermarket_metadata"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ── 2b. PostgreSQL Visual UI (pgAdmin) ───────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:8.5
+    container_name: postgres_ui_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL:    admin@supermarket.ke
+      PGADMIN_DEFAULT_PASSWORD: WebAdminPassword2026
+      PGADMIN_LISTEN_PORT:      5050
+    ports:
+      # FIX: original was 5050:5050 but pgAdmin listens on port 80 by default.
+      #      PGADMIN_LISTEN_PORT overrides the internal port to 5050 so the
+      #      mapping is now consistent and the UI loads at http://localhost:5050.
+      - "5050:5050"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ── 3. MongoDB (NoSQL Document Audit Store) ───────────────────────────────
+  mongodb:
+    image: mongo:6.0
+    container_name: supermarket_mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo_retail_admin
+      MONGO_INITDB_ROOT_PASSWORD: QuickmartPassword2026
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # ── 3b. MongoDB Visual UI (Mongo Express) ────────────────────────────────
+  mongo-express:
+    image: mongo-express:1.0.0-alpha.4
+    container_name: mongo_ui_express
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: mongo_retail_admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: QuickmartPassword2026
+      ME_CONFIG_MONGODB_URL: "mongodb://mongo_retail_admin:QuickmartPassword2026@supermarket_mongodb:27017/?authSource=admin"
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: WebAdminPassword2026
+    ports:
+      - "8081:8081"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  mongo_data:
